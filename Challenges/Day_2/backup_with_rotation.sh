@@ -1,46 +1,44 @@
 #!/bin/bash
+#Author: Manjunath Gudur
+##Created Time: 15/10/2024
+#Last Modified Time: 16/10/2024
 
-# Display usage information
-function display_usage {
-    echo "Usage: $0 /path/to/source_directory"
-}
-
-# Check if a valid directory path is provided as a command-line argument
-if [ $# -eq 0 ] || [ ! -d "$1" ]; then
-    echo "Error: Please provide a valid directory path as a command-line argument."
-    display_usage
-    exit 1
+if [[ $# -eq 0 ]] || [[ ! -d "$1" ]];
+then
+        echo "Please provide valid directory path which you want to take backup:"
+        exit
 fi
 
-# Assign source directory from command-line argument
+#argument passed by user will be source directory for which need to take backup
 source_dir="$1"
 
-# Function to create a timestamped backup and zip it
+#Function to create backup of particular Directory provided by User as command line argument
 function create_backup {
-    local timestamp=$(date '+%Y-%m-%d_%H-%M-%S')
-    local backup_dir="${source_dir}/backup_${timestamp}"
+        local timestamp=$(date '+%Y-%m-%d_%H-%M-%S')
+        backup_dir="${source_dir}/backup/backup_${timestamp}"
+        zip -r  "${backup_dir}.zip" "${source_dir}" >/dev/null
 
-    # Create backup directory and zip its contents
-    zip -r "${backup_dir}.zip" "$source_dir" >/dev/null
-    if [ $? -eq 0 ]; then
-        echo "Backup created successfully: ${backup_dir}.zip"
-    else
-        echo "Error: Failed to create backup."
-    fi
+        if [[ $? -eq 0 ]];
+        then
+                echo "Backup created successfully: ${backup_dir}.zip"
+        else
+                echo "Backup failed to create."
+        fi
 }
 
-# Function to perform rotation and keep only the last 3 backups
-function perform_rotation {
-    local backups=($(ls -t "${source_dir}/backup_"*.zip 2>/dev/null))
+#Rotational backup - it will only keep latest 3 backups and delete other backups
+function backup_rotation {
+        backups=($(ls -t "${source_dir}/backup/backup_"*.zip 2>/dev/null))
 
-    if [ "${#backups[@]}" -gt 3 ]; then
-        local backups_to_remove=("${backups[@]:3}")
-        for backup in "${backups_to_remove[@]}"; do
-            rm -f "$backup"
-        done
-    fi
+        if [[ ${#backups[@]} -gt 3 ]];then
+                backups_to_remove="${backups[@]:3}"
+                for backup in $backups_to_remove;do
+                        rm -r $backup
+                        echo "Old backup ${backup} deleted as per retention policy!"
+                done
+        fi
 }
-
-# Main script logic
+#Function calling to create backup of given directory
 create_backup
-perform_rotation
+#function to Perform rotational backup
+backup_rotation
