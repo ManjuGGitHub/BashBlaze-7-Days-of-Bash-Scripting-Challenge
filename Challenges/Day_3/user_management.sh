@@ -78,7 +78,7 @@ function reset_password {
 
 function listUser(){
         echo "All Avaialable Users are: "
-        cat /etc/passwd | awk -F: '{print $1}'
+        cat /etc/passwd | awk -F: '{ print "- " $1 " (UID: " $3 ")" }'
 }
 
 #Calling displayUsage function to prompt all the available option
